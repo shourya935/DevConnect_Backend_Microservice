@@ -1,0 +1,24 @@
+{
+  "name": "devtinder",
+  "version": "1.0.0",
+  "description": "A platform Where Developers can Connect",
+  "main": "index.js",
+  "scripts": {
+    "test": "jest",
+    "start": "src/app.js",
+    "dev": " nodemon src/app.js"
+  },
+  "keywords": [
+    "Nodejs",
+    "Expressjs",
+    "RestAPIs",
+    "MongoDB"
+  ],
+  "author": "Shourya Jain",
+  "license": "ISC",
+  "dependencies": {
+    "dotenv": "^17.2.2",
+    "express": "^5.1.0",
+    "mongoose": "^8.18.0"
+  }
+}
