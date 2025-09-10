@@ -4,21 +4,17 @@ require("./config/database");
 const { connectDB } = require("./config/database");
 const { User } = require("./models/user");
 const validator = require("validator");
+const { validateSignUpData } = require("./utils/Validation")
 
 app.use(express.json());
 
 app.post("/signup", async (req, res) => {
+  
   const user = new User(req.body);
-  const userEmail = req.body.emailID;
-  const userPassword = req.body.password;
-
   try {
-    if (!validator.isEmail(userEmail)) {
-      throw new Error("Invalid Email" + userEmail);
-    }
-    if(!validator.isStrongPassword(userPassword)){
-      throw new Error("Your Password must be at least 8 characters and include uppercase, lowercase, number, and symbol.")
-    }
+    //validation of data
+  validateSignUpData(req)
+  //encrypt the password
     await user.save();
     res.send("user added successfully");
   } catch (err) {

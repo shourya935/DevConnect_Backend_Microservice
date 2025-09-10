@@ -28,11 +28,11 @@ const userSchema = new mongoose.Schema({
         lowercase: true,
         unique: true,
         trim: true,
-        validate(value){
-            if(!validator.isEmail(value)){
-                throw new Error("Invalid email address:" + value)
-            }
-        }
+        // validate(value){
+        //     if(!validator.isEmail(value)){
+        //         throw new Error("Invalid email address:" + value)
+        //     }
+        // }
     },
      password: {
         type: String,
@@ -54,7 +54,7 @@ const userSchema = new mongoose.Schema({
         type: String,
         validate(value){//by default it is only applicable on post req and not applicable on patch req
             if(!["male","female","others"].includes(value.toLowerCase())){
-                throw new Error("Gender data is not valid");
+                throw new Error("Gender data is not valid Enter Male or female");
             }
         },
     },
