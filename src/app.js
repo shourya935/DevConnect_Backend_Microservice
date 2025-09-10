@@ -3,23 +3,29 @@ const app = express();
 require("./config/database");
 const { connectDB } = require("./config/database");
 const { User } = require("./models/user");
+const validator = require("validator");
 
 app.use(express.json());
 
 app.post("/signup", async (req, res) => {
-  // creating a new instance of User model
-
-  const user = new User(req.body); //req.body has JSON payload conataining user info wich is comming from client
+  const user = new User(req.body);
+  const userEmail = req.body.emailID;
+  const userPassword = req.body.password;
 
   try {
+    if (!validator.isEmail(userEmail)) {
+      throw new Error("Invalid Email" + userEmail);
+    }
+    if(!validator.isStrongPassword(userPassword)){
+      throw new Error("Your Password must be at least 8 characters and include uppercase, lowercase, number, and symbol.")
+    }
     await user.save();
     res.send("user added successfully");
   } catch (err) {
-    res.status(400).send("Error saving the user:" + err.message);
+    res.status(400).send(err.message);
   }
 });
 //now we have users in our DB
-
 
 //getting a single user from DB
 app.get("/user", async (req, res) => {
@@ -55,32 +61,51 @@ app.get("/feed", async (req, res) => {
 
 //Deleting user from DB
 
-app.delete("/user", async (req,res) => {
+app.delete("/user", async (req, res) => {
   const userId = req.body.userId;
-  const user = await User.findByIdAndDelete(userId)
-  try{
-    res.send(user + "Deleted Sucessfully")
-  }catch(err){
-    "something went wrong"
+  const user = await User.findByIdAndDelete(userId);
+  try {
+    res.send(user + "Deleted Sucessfully");
+  } catch (err) {
+    ("something went wrong");
   }
-}) 
+});
 
 //updating name of a user , finding them by id
 
-app.patch("/user", async (req,res) => {
-  const userId = req.body.userId;
-  const lastName = req.body.lastName;
-  // const user = await User.findByIdAndUpdate(userId,{lastName: lastName},{ returnDocument: 'after' })
-  const Data = req.body;
+app.patch("/user/:userId", async (req, res) => {
+  const userId = req.params?.userId;
+  const data = req.body;
+  try {
+    const ALLOWED_UPDATES = ["photoURL", "about", "age", "skills"];
+    const isUpdateAllowed = Object.keys(data).every((key) =>
+      ALLOWED_UPDATES.includes(key)
+    );
 
-  const user = await User.findByIdAndUpdate(userId,Data,{ returnDocument: 'after' })
+    if (!isUpdateAllowed) {
+      throw new Error("Update not allowed");
+    }
+    if (data.skills && data.skills.length > 10) {
+      throw new Error("Skills can not be more than 10");
+    }
+    if (data.about && data.about.length > 200) {
+      throw new Error("About section too long");
+    }
 
-  try{
-    res.send(user + "lastName upgraded successfully")
-  }catch(err){
-    "something went wrong"
+     if (!validator.isNumeric(data?.age.toString())) {
+      throw new Error("Age must be in numbers");
+    }
+
+    const user = await User.findByIdAndUpdate(userId, data, {
+      returnDocument: "after",
+      runValidators: true,
+    });
+
+    res.send(user + "This User Upgraded Successfully");
+  } catch (err) {
+    res.status(400).send(err.message);
   }
-})
+});
 
 connectDB()
   .then(() => {
