@@ -4,25 +4,63 @@ require("./config/database");
 const { connectDB } = require("./config/database");
 const { User } = require("./models/user");
 const validator = require("validator");
-const { validateSignUpData } = require("./utils/Validation")
+const { validateSignUpData } = require("./utils/Validation");
+const bcrypt = require("bcrypt");
 
 app.use(express.json());
 
 app.post("/signup", async (req, res) => {
+  const {firstName,lastName,emailID,password} = req.body
   
-  const user = new User(req.body);
   try {
     //validation of data
   validateSignUpData(req)
   //encrypt the password
+  const passwordHash = await bcrypt.hash(password,10)
+  console.log(passwordHash)
+
+   const user = new User({
+    firstName,
+    lastName,
+    emailID,
+    password:passwordHash,
+   });
+   
     await user.save();
     res.send("user added successfully");
   } catch (err) {
     res.status(400).send(err.message);
   }
 });
-//now we have users in our DB
 
+app.post ("/login", async (req, res) => {
+  const {emailID,password} = req.body;
+  
+  
+  try{
+    const user = await User.findOne({emailID: emailID})
+  if(!user){
+    throw new Error("❌ Email ID does not exist. Please register first.")
+  }
+
+  const isPasswordValid = await bcrypt.compare(password,user.password)
+  if(!isPasswordValid){
+    throw new Error("!! Incorrect Password please try again")
+  }
+
+  res.send("Login Successful")
+
+  }catch(err){
+    res.status(404).send(err.message)
+  }
+  
+} )
+
+ 
+
+
+
+//now we have users in our DB
 //getting a single user from DB
 app.get("/user", async (req, res) => {
   const userName = req.body.firstName;
@@ -56,7 +94,6 @@ app.get("/feed", async (req, res) => {
 });
 
 //Deleting user from DB
-
 app.delete("/user", async (req, res) => {
   const userId = req.body.userId;
   const user = await User.findByIdAndDelete(userId);
@@ -68,7 +105,6 @@ app.delete("/user", async (req, res) => {
 });
 
 //updating name of a user , finding them by id
-
 app.patch("/user/:userId", async (req, res) => {
   const userId = req.params?.userId;
   const data = req.body;
