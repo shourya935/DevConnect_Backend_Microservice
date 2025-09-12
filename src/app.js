@@ -6,8 +6,13 @@ const { User } = require("./models/user");
 const validator = require("validator");
 const { validateSignUpData } = require("./utils/Validation");
 const bcrypt = require("bcrypt");
+const cookie = require("cookie")
+const cookieParser = require("cookie-parser")
+const jwt = require("jsonwebtoken")
+const {userAuth} = require("./middlewares/auth")
 
 app.use(express.json());
+app.use(cookieParser())
 
 app.post("/signup", async (req, res) => {
   const {firstName,lastName,emailID,password} = req.body
@@ -15,10 +20,11 @@ app.post("/signup", async (req, res) => {
   try {
     //validation of data
   validateSignUpData(req)
+
   //encrypt the password
   const passwordHash = await bcrypt.hash(password,10)
-  console.log(passwordHash)
-
+  
+  //create new instance of User Model
    const user = new User({
     firstName,
     lastName,
@@ -38,16 +44,24 @@ app.post ("/login", async (req, res) => {
   
   
   try{
+
     const user = await User.findOne({emailID: emailID})
   if(!user){
     throw new Error("❌ Email ID does not exist. Please register first.")
   }
 
-  const isPasswordValid = await bcrypt.compare(password,user.password)
+  const isPasswordValid = await user.ValidatePassword(password)
   if(!isPasswordValid){
     throw new Error("!! Incorrect Password please try again")
   }
+  //if login successful
+  //create a JWT Token
+  const token = await user.getJWT()
+  console.log(token)
 
+  //Add token to cookie and send response back to user
+  res.cookie("token",token);//cookie sent to client 
+  
   res.send("Login Successful")
 
   }catch(err){
@@ -56,88 +70,15 @@ app.post ("/login", async (req, res) => {
   
 } )
 
- 
-
-
-
-//now we have users in our DB
-//getting a single user from DB
-app.get("/user", async (req, res) => {
-  const userName = req.body.firstName;
-
-  const user = await User.find({ firstName: userName });
-
-  try {
-    if (user.length === 0) {
-      res.status(404).send("user not found");
-    } else {
-      res.send(user);
-    }
-  } catch (err) {
-    res.send("Something went wrong" + err.message);
+app.get("/profile", userAuth, async (req,res) => {
+  try{
+  const user = req.user
+  res.send(user)
+  }catch(err){
+    res.status(404).send(err.message)
   }
-});
+})
 
-//getting all users from DB
-app.get("/feed", async (req, res) => {
-  const users = await User.find({});
-
-  try {
-    if (users.length === 0) {
-      res.status(404).send("Users not exist!!");
-    } else {
-      res.send(users);
-    }
-  } catch (err) {
-    res.send("Something went wrong" + err.message);
-  }
-});
-
-//Deleting user from DB
-app.delete("/user", async (req, res) => {
-  const userId = req.body.userId;
-  const user = await User.findByIdAndDelete(userId);
-  try {
-    res.send(user + "Deleted Sucessfully");
-  } catch (err) {
-    ("something went wrong");
-  }
-});
-
-//updating name of a user , finding them by id
-app.patch("/user/:userId", async (req, res) => {
-  const userId = req.params?.userId;
-  const data = req.body;
-  try {
-    const ALLOWED_UPDATES = ["photoURL", "about", "age", "skills"];
-    const isUpdateAllowed = Object.keys(data).every((key) =>
-      ALLOWED_UPDATES.includes(key)
-    );
-
-    if (!isUpdateAllowed) {
-      throw new Error("Update not allowed");
-    }
-    if (data.skills && data.skills.length > 10) {
-      throw new Error("Skills can not be more than 10");
-    }
-    if (data.about && data.about.length > 200) {
-      throw new Error("About section too long");
-    }
-
-     if (!validator.isNumeric(data?.age.toString())) {
-      throw new Error("Age must be in numbers");
-    }
-
-    const user = await User.findByIdAndUpdate(userId, data, {
-      returnDocument: "after",
-      runValidators: true,
-    });
-
-    res.send(user + "This User Upgraded Successfully");
-  } catch (err) {
-    res.status(400).send(err.message);
-  }
-});
 
 connectDB()
   .then(() => {
