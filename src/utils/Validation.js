@@ -1,20 +1,52 @@
 const validator = require("validator");
 
 const validateSignUpData = (req) => {
-    const {firstName,lastName,emailID,password,skills,about} = req.body
-    if(!firstName || !lastName){
-        throw new Error("Make sure to enter first name and last name")
-    } else if(!validator.isEmail(emailID)){
-        throw new Error("Please enter valid Email Id")
-    } else if(!validator.isStrongPassword(password)){
-        throw new Error("Your Password must be at least 8 characters and include uppercase, lowercase, number, and symbol.")
-    } else if(skills && skills.length > 10 ){
-        throw new Error ("Skills coloumn should not exseed 10 Skills")
-    } else if(about && about.length > 300){
-        throw new Error ("Your discription should be in less than 100 words")
-    }
+  const { firstName, lastName, emailID, password, skills, about } = req.body;
+
+  if (firstName !== undefined && !firstName) {
+    throw new Error("First name cannot be empty");
+  }
+
+  if (lastName !== undefined && !lastName) {
+    throw new Error("Last name cannot be empty");
+  }
+
+  if (emailID !== undefined && !validator.isEmail(emailID)) {
+    throw new Error("Please enter a valid Email ID");
+  }
+
+  if (password !== undefined && !validator.isStrongPassword(password)) {
+    throw new Error("Your Password must be at least 8 characters and include uppercase, lowercase, number, and symbol.");
+  }
+
+  if (skills && skills.length > 10) {
+    throw new Error("Skills column should not exceed 10 skills");
+  }
+
+  if (about && about.length > 300) {
+    throw new Error("Your description should be less than 100 words");
+  }
+};
+
+
+const validateEditProfileData = (req) => {
+    const allowedEditFields = [
+        "firstName",
+        "lastName",
+        "emailID",
+        "photoURL",
+        "gender",
+        "age",
+        "about",
+        "skills"
+    ]
+   const isEditAllowed = Object.keys(req.body).every((field) => 
+    allowedEditFields.includes(field)
+ )
+ return isEditAllowed
 }
 
 module.exports = {
-    validateSignUpData
+    validateSignUpData,
+    validateEditProfileData
 }
