@@ -1,7 +1,7 @@
 const validator = require("validator");
 
 const validateSignUpData = (req) => {
-  const { firstName, lastName, emailID, password, skills, about } = req.body;
+  const { firstName, lastName, emailID, password, skills, about, gender } = req.body;
 
   if (firstName !== undefined && !firstName) {
     throw new Error("First name cannot be empty");
@@ -9,6 +9,10 @@ const validateSignUpData = (req) => {
 
   if (lastName !== undefined && !lastName) {
     throw new Error("Last name cannot be empty");
+  }
+
+  if (gender !== undefined && !["male","female","others"].includes(gender.toLowerCase())){
+    throw new Error("Error: Enter between male,female or others in gender section ")
   }
 
   if (emailID !== undefined && !validator.isEmail(emailID)) {

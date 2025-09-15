@@ -53,9 +53,9 @@ const userSchema = new mongoose.Schema({
     },
      gender: {
         type: String,
-        validate(value){//by default it is only applicable on post req and not applicable on patch req
+        validate(value){
             if(!["male","female","others"].includes(value.toLowerCase())){
-                throw new Error("Gender data is not valid Enter Male or female");
+                throw new Error("Gender data is not valid Enter Male or female")
             }
         },
     },
