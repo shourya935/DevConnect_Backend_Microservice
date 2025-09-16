@@ -3,6 +3,7 @@ const userRouter = express.Router()
 
 const {userAuth} = require("../middlewares/auth")
 const {ConnectionRequest} = require("../models/connectionRequest")
+const {User} = require("../models/user")
 
 userRouter.get("/user/requests/received", userAuth, async (req,res) =>{
 
@@ -56,6 +57,48 @@ userRouter.get("/user/connections", userAuth, async (req,res) => {
     }catch(err){
         res.status(400).send("Error:" + err.message)
     }
+})
+
+userRouter.get("/users/feed", userAuth, async (req,res) => {
+    const loggedInUser = req.user;
+
+    const connectionRequests = await ConnectionRequest.find({
+        status: {$in:["interested", "ignored"]},
+        fromUserId: loggedInUser._id
+    })
+
+    const connections = await ConnectionRequest.find({
+        status: "accepted",
+        $or: [
+            {toUserId: loggedInUser._id},
+            {fromUserId: loggedInUser._id}
+        ]
+    })
+
+    const excludedUserIds = new Set();
+
+    connectionRequests.forEach(req => {
+        excludedUserIds.add(req.toUserId.toString())
+    })
+
+    connections.forEach(req => {
+        if(req.fromUserId.toString() === loggedInUser._id.toString()){
+            excludedUserIds.add(req.toUserId.toString())
+        }else{
+            excludedUserIds.add(req.fromUserId.toString())
+        }
+    })
+
+    excludedUserIds.add(loggedInUser._id.toString())
+
+    const feedUsers = await User.find({
+        _id: {$nin: Array.from(excludedUserIds)}
+    }).select("firstName")
+
+    res.json({
+        message:"People you may Know :",
+        request: feedUsers
+    })
 })
 
 
