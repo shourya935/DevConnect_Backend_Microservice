@@ -26,6 +26,41 @@ const userAuth = async (req,res,next) => {
     }
 }
 
+
+
+// const userAuth = async (req, res, next) => {
+//   try {
+//     const { token } = req.cookies;
+
+//     if (!token) {
+//       return res.redirect("/login");
+//     }
+
+//     const decoded = jwt.verify(token, "Devtinder$qwer");
+
+//     const user = await User.findById(decoded._id);
+
+//     if (!user) {
+//       return res.redirect("/login");
+//     }
+
+//     req.user = user;
+
+//     // Redirect to dashboard if already logged in and accessing login/register route
+//     if (req.path === "/login" || req.path === "/register") {
+//       return res.redirect("/dashboard");
+//     }
+
+//     next();
+//   } catch (err) {
+//     console.error("Auth Error:", err.message);
+//     res.redirect("/login");
+//   }
+// };
+
+module.exports = { userAuth };
+
+
 module.exports = {
     userAuth
 }

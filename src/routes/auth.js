@@ -1,12 +1,27 @@
 const express = require("express");
 const authRouter = express.Router();
-
+const multer = require("multer")
 const { User } = require("../models/user");
 const { validateSignUpData } = require("../utils/Validation");
 const bcrypt = require("bcrypt");
+const path = require("path")
+const {upload} = require("../middlewares/upload")
+
+
+
 
 authRouter.post("/signup", async (req, res) => {
-  const {firstName,lastName,emailID,password} = req.body
+  upload.single("image")(req, res, async function (err) {
+
+     if (err instanceof multer.MulterError) {
+      return res.status(400).json({ success: false, message: "❌ Please upload a photo less than 3MB" });
+    } else if (err) {
+      return res.status(400).json({ success: false, message: `❌ Upload Error: ${err.message}` });
+    }
+
+  const {firstName,lastName,emailID,password,about,skills,age,gender} = req.body
+
+   const imageUrl = req.file?.path;
   
   try {
     //validation of data
@@ -20,15 +35,25 @@ authRouter.post("/signup", async (req, res) => {
     firstName,
     lastName,
     emailID,
+    about,
     password:passwordHash,
+    skills,
+    age,
+    gender,
+    photoURL:imageUrl
+    // photoURL:'images/'+ req.file.filename
    });
    
     await user.save();
-    res.send("user added successfully");
+     res.status(201).json({ success: true, user });
+
   } catch (err) {
-    res.status(400).send(err.message);
+     res.status(400).json({ success: false, message: err.message });
+
   }
+  })
 });
+
 
 authRouter.post ("/login", async (req, res) => {
   const {emailID,password} = req.body;
@@ -53,26 +78,22 @@ authRouter.post ("/login", async (req, res) => {
   //Add token to cookie and send response back to user
   res.cookie("token",token);//cookie sent to client 
   
-  res.send("Login Successful")
-
+  res.send(user)
+ 
   }catch(err){
     res.status(404).send(err.message)
   }
   
 });
 
-// authRouter.post("/logout", (req,res) => {
-//   res.clearCookie("token")
-//   res.status(200).json({message:"Logged out "})
-// })
 
 authRouter.post("/logout", (req,res) => {
   res.cookie("token",null,{
     expires: new Date(Date.now()),
+   
   })
+   res.send("logout Successful")
 })
-
-
 
 
 module.exports = authRouter;

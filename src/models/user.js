@@ -2,6 +2,7 @@ const mongoose = require("mongoose");
 const validator = require("validator");
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcrypt");
+const {SESSION_SECRET} = process.env
 const userSchema = new mongoose.Schema({
 
     firstName: {
@@ -62,21 +63,15 @@ const userSchema = new mongoose.Schema({
     photoURL: {
         type: String,
         default: "https://upload.wikimedia.org/wikipedia/commons/9/99/Sample_User_Icon.png",
-        validate(value){
-            if(!validator.isURL(value)){
-                throw new Error("Please enter valid URL")
-            }
-        }
+       
     },
     about: {
         type: String,
     },
     skills:{
         type:[String]
-    }
-
-     
-
+    },
+ 
 
 },
 {
@@ -88,7 +83,7 @@ userSchema.methods.getJWT = async function () {
 
     const user = this;
 
-    const token = await jwt.sign({_id:user._id},"Devtinder$qwer", { expiresIn: '7d' });
+    const token = await jwt.sign({_id:user._id},SESSION_SECRET, { expiresIn: '7d' });
 
     return token;
 }
