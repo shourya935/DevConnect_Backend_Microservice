@@ -7,7 +7,7 @@ const userAuth = async (req,res,next) => {
         //validate the user
         const {token} = req.cookies
         if(!token){
-            throw new Error("Invalid token Please LogIn Again")
+            res.status(401).send("Invalid token Please LogIn Again")
         }
         const decoded = jwt.verify(token,"Devtinder$qwer")
 

@@ -81,7 +81,7 @@ authRouter.post ("/login", async (req, res) => {
   res.send(user)
  
   }catch(err){
-    res.status(404).send(err.message)
+    res.status(404).json({ success: false, message: err.message });
   }
   
 });
