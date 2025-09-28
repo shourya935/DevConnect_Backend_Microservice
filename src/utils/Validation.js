@@ -7,13 +7,13 @@ const validateSignUpData = (req) => {
     throw new Error("First name cannot be empty");
   }
 
-  if (lastName !== undefined && !lastName) {
-    throw new Error("Last name cannot be empty");
-  }
+  // if (lastName !== undefined && !lastName) {
+  //   throw new Error("Last name cannot be empty");
+  // }
 
-  if (gender !== undefined && !["male","female","others"].includes(gender.toLowerCase())){
-    throw new Error("Error: Enter between male,female or others in gender section ")
-  }
+  // if (gender !== undefined && !["male","female","others"].includes(gender.toLowerCase())){
+  //   throw new Error("Error: Enter between male,female or others in gender section ")
+  // }
 
   if (emailID !== undefined && !validator.isEmail(emailID)) {
     throw new Error("Please enter a valid Email ID");
@@ -23,12 +23,12 @@ const validateSignUpData = (req) => {
     throw new Error("Your Password must be at least 8 characters and include uppercase, lowercase, number, and symbol.");
   }
 
-  if (skills && skills.length > 10) {
+  if (skills && skills.length > 100) {
     throw new Error("Skills column should not exceed 10 skills");
   }
 
-  if (about && about.length > 300) {
-    throw new Error("Your description should be less than 100 words");
+  if (about && about.length > 1050) {
+    throw new Error("Your description should be less than 50 words");
   }
 };
 
@@ -52,5 +52,6 @@ const validateEditProfileData = (req) => {
 
 module.exports = {
     validateSignUpData,
-    validateEditProfileData
+    validateEditProfileData,
+   
 }

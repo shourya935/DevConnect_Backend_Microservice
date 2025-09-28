@@ -12,7 +12,7 @@ userRouter.get("/user/requests/received", userAuth, async (req, res) => {
     const connectionRequest = await ConnectionRequest.find({
       toUserId: loggedInUser._id,
       status: "interested",
-    }).populate("fromUserId", ["firstName", "lastName"]);
+    }).populate("fromUserId", ["firstName", "photoURL", "age", "skills", "about"]);
 
     res.json({
       message: `Hey ${loggedInUser.firstName}, your connection requests:`,
@@ -31,14 +31,14 @@ userRouter.get("/user/connections", userAuth, async (req, res) => {
       status: "accepted",
       $or: [{ toUserId: loggedInUser._id }, { fromUserId: loggedInUser._id }],
     })
-      .populate("fromUserId", ["firstName"])
-      .populate("toUserId", ["firstName"]);
+      .populate("fromUserId", ["firstName", "age", "about", "skills", "photoURL"])
+      .populate("toUserId", ["firstName", "age", "about", "skills", "photoURL"]);
 
     // Extract only the other user in each connection
     const connections = connectionRequests.map((req) => {
       // If logged-in user is the receiver, return sender
       if (req.toUserId._id.toString() === loggedInUser._id.toString()) {
-        return req.fromUserId;
+         return req.fromUserId;
       } else {
         return req.toUserId;
       }
@@ -61,37 +61,22 @@ userRouter.get("/users/feed", userAuth, async (req, res) => {
     let limit = parseInt(req.query.limit);
     limit = limit > 50 ? 50 : limit;
     const skip = (page - 1) * limit;
-
+    
     const connectionRequests = await ConnectionRequest.find({
-      status: { $in: ["interested", "ignored"] },
-      fromUserId: loggedInUser._id,
-    });
+      $or: [{ fromUserId: loggedInUser._id }, { toUserId: loggedInUser._id }],
+    }).select("fromUserId  toUserId");
 
-    const connections = await ConnectionRequest.find({
-      status: "accepted",
-      $or: [{ toUserId: loggedInUser._id }, { fromUserId: loggedInUser._id }],
-    });
-
-    const excludedUserIds = new Set();
-
+    const hideUsersFromFeed = new Set();
     connectionRequests.forEach((req) => {
-      excludedUserIds.add(req.toUserId.toString());
+      hideUsersFromFeed.add(req.fromUserId.toString());
+      hideUsersFromFeed.add(req.toUserId.toString());
     });
-
-    connections.forEach((req) => {
-      if (req.fromUserId.toString() === loggedInUser._id.toString()) {
-        excludedUserIds.add(req.toUserId.toString());
-      } else {
-        excludedUserIds.add(req.fromUserId.toString());
-      }
-    });
-
-    excludedUserIds.add(loggedInUser._id.toString());
+    hideUsersFromFeed.add(loggedInUser._id.toString());
 
     const feedUsers = await User.find({
-      _id: { $nin: Array.from(excludedUserIds) },
+      _id: { $nin: Array.from(hideUsersFromFeed) },
     })
-      .select("firstName")
+      .select("firstName age about skills photoURL")
       .skip(skip)
       .limit(limit);
 

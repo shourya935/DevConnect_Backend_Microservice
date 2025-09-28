@@ -9,6 +9,10 @@ const {
 } = require("../utils/Validation");
 const validator = require("validator");
 
+const {upload} = require("../middlewares/upload")
+const path = require("path")
+const multer = require("multer")
+
 profileRouter.get("/profile/veiw", userAuth, async (req, res) => {
   try {
     const user = req.user;
@@ -18,33 +22,53 @@ profileRouter.get("/profile/veiw", userAuth, async (req, res) => {
   }
 });
 
-profileRouter.patch("/profile/edit", userAuth, async (req, res) => {
-  try {
-    validateSignUpData(req);
-    if (!validateEditProfileData(req)) {
-      throw new Error("Cant edit profile");
+profileRouter.patch(
+  "/profile/edit",
+  userAuth,
+  upload.single("image"),
+  async (req, res) => {
+    try {
+      const loggedInUser = req.user;
+
+      if (!validateEditProfileData(req)) {
+        throw new Error("Invalid profile update data.");
+      }
+
+      // Extract updatable fields
+      const updatableFields = ["firstName", "age", "about", "skills"];
+      updatableFields.forEach((field) => {
+        if (req.body[field]) {
+          loggedInUser[field] = req.body[field];
+        }
+      });
+
+      // If a new profile image is uploaded
+      if (req.file && req.file.path) {
+        loggedInUser.photoURL = req.file.path; // Cloudinary gives full URL in `path`
+      }
+
+      await loggedInUser.save();
+
+      return res.status(200).json({
+        success: true,
+        message: "Profile updated successfully",
+        user: loggedInUser,
+      });
+    } catch (err) {
+      console.error("Edit Profile Error:", err.message);
+      return res.status(400).json({
+        success: false,
+        message: err.message || "Profile update failed",
+      });
     }
-  } catch (err) {
-    res.status(404).send("Error: " + err.message);
   }
-
-  const loggedInUser = req.user;
-  console.log(loggedInUser); //userinfo before edit
-
-  Object.keys(req.body).forEach((key) => (loggedInUser[key] = req.body[key]));
-  console.log(loggedInUser); //userinfo after edit
-
-  await loggedInUser.save();
-
-  res.send(loggedInUser.firstName + "Profile upgraded successfully");
-});
+);
 
 profileRouter.patch("/profile/password", userAuth, async (req, res) => {
   try {
     const loggedInUser = req.user;
-    const { oldPassword, newPassword } = req.body;
+    const { oldPassword, newPassword, confirmPassword  } = req.body;
     let savedHashPassword = loggedInUser.password;
-
     const isPasswordValid = await bcrypt.compare(
       oldPassword,
       savedHashPassword
@@ -60,7 +84,13 @@ profileRouter.patch("/profile/password", userAuth, async (req, res) => {
       );
     }
 
-    const newHashPassword = await bcrypt.hash(newPassword, 10);
+    if(confirmPassword != newPassword){
+      throw new Error (
+        "Password does not match"
+      )
+    }
+
+    const newHashPassword = await bcrypt.hash(newPassword, 8);
 
     loggedInUser.password = newHashPassword;
 

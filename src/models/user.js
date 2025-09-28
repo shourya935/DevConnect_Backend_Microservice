@@ -9,20 +9,10 @@ const userSchema = new mongoose.Schema({
         type: String,
         required: true,
         maxLength: 15,
-        validate(value){
-            if(!validator.isAlpha(value)){
-                throw new Error("Name should only contain alphabets")
-            }
-        }
     },
      lastName: {
         type: String,
         maxLength: 15,
-        validate(value){
-            if(!validator.isAlpha(value)){
-                throw new Error("Name should only contain alphabets")
-            }
-        }
     },
      emailID: {
         type: String,
@@ -54,11 +44,6 @@ const userSchema = new mongoose.Schema({
     },
      gender: {
         type: String,
-        validate(value){
-            if(!["male","female","others"].includes(value.toLowerCase())){
-                throw new Error("Gender data is not valid Enter Male or female")
-            }
-        },
     },
     photoURL: {
         type: String,
