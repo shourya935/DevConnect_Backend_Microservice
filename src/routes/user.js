@@ -12,7 +12,13 @@ userRouter.get("/user/requests/received", userAuth, async (req, res) => {
     const connectionRequest = await ConnectionRequest.find({
       toUserId: loggedInUser._id,
       status: "interested",
-    }).populate("fromUserId", ["firstName", "photoURL", "age", "skills", "about"]);
+    }).populate("fromUserId", [
+      "firstName",
+      "photoURL",
+      "age",
+      "skills",
+      "about",
+    ]);
 
     res.json({
       message: `Hey ${loggedInUser.firstName}, your connection requests:`,
@@ -31,14 +37,26 @@ userRouter.get("/user/connections", userAuth, async (req, res) => {
       status: "accepted",
       $or: [{ toUserId: loggedInUser._id }, { fromUserId: loggedInUser._id }],
     })
-      .populate("fromUserId", ["firstName", "age", "about", "skills", "photoURL"])
-      .populate("toUserId", ["firstName", "age", "about", "skills", "photoURL"]);
+      .populate("fromUserId", [
+        "firstName",
+        "age",
+        "about",
+        "skills",
+        "photoURL",
+      ])
+      .populate("toUserId", [
+        "firstName",
+        "age",
+        "about",
+        "skills",
+        "photoURL",
+      ]);
 
     // Extract only the other user in each connection
     const connections = connectionRequests.map((req) => {
       // If logged-in user is the receiver, return sender
       if (req.toUserId._id.toString() === loggedInUser._id.toString()) {
-         return req.fromUserId;
+        return req.fromUserId;
       } else {
         return req.toUserId;
       }
@@ -53,6 +71,31 @@ userRouter.get("/user/connections", userAuth, async (req, res) => {
   }
 });
 
+
+userRouter.delete("/user/deleteconnection/:userId", userAuth, async (req, res) => {
+  try {
+    const loggedInUser = req.user;
+    const { userId } = req.params;
+
+   
+    const deletedConnection = await ConnectionRequest.findOneAndDelete({
+      status: "accepted",
+      $or: [
+        { fromUserId: loggedInUser._id, toUserId: userId },
+        { fromUserId: userId, toUserId: loggedInUser._id },
+      ],
+    });
+
+    if (!deletedConnection) {
+      return res.status(404).json({ message: "Connection not found" });
+    }
+
+    res.json({ message: "Connection removed successfully", deletedConnection });
+  } catch (err) {
+    res.status(400).json({ message: "Error: " + err.message });
+  }
+});
+
 userRouter.get("/users/feed", userAuth, async (req, res) => {
   try {
     const loggedInUser = req.user;
@@ -61,7 +104,7 @@ userRouter.get("/users/feed", userAuth, async (req, res) => {
     let limit = parseInt(req.query.limit);
     limit = limit > 50 ? 50 : limit;
     const skip = (page - 1) * limit;
-    
+
     const connectionRequests = await ConnectionRequest.find({
       $or: [{ fromUserId: loggedInUser._id }, { toUserId: loggedInUser._id }],
     }).select("fromUserId  toUserId");
@@ -84,7 +127,6 @@ userRouter.get("/users/feed", userAuth, async (req, res) => {
       message: "People you may Know :",
       request: feedUsers,
     });
- 
   } catch (err) {
     res.send("Error:" + err.message);
   }
