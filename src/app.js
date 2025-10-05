@@ -13,7 +13,8 @@ app.use(
     origin:["http://localhost:5173",
       "https://devconnect-wheat.vercel.app"
     ],
-    credentials: true
+    credentials: true,
+     methods: ["GET", "POST", "PUT", "PATCH", "DELETE"], 
   }))
 app.use(express.urlencoded({ extended: true }));// Parse URL-encoded bodies (from HTML forms)
 app.use(express.json());
