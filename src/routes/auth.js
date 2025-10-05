@@ -58,9 +58,9 @@ authRouter.post("/signup", async (req, res) => {
 
       res.cookie("token", token, {
         httpOnly: true,
-        sameSite: "none", // ✅ Required for cross-origin
-        secure: process.env.NODE_ENV === "production", // ✅ Required on Vercel
-        maxAge: 1000 * 60 * 60 * 24,
+        sameSite: process.env.NODE_ENV === "production" ? "none" : "lax", // change this
+        secure: process.env.NODE_ENV === "production", // ✅ true on prod, false locally
+        maxAge: 24 * 60 * 60 * 1000,
       });
 
       res.status(201).json({ success: true, user });
@@ -103,9 +103,9 @@ authRouter.post("/login", async (req, res) => {
 
     res.cookie("token", token, {
       httpOnly: true,
-      sameSite: "none",
-      secure: process.env.NODE_ENV === "production",
-      maxAge: 1000 * 60 * 60 * 24,
+      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax", // change this
+      secure: process.env.NODE_ENV === "production", // ✅ true on prod, false locally
+      maxAge: 24 * 60 * 60 * 1000,
     });
 
     res.json({ success: true, user });
