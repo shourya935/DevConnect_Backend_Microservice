@@ -11,7 +11,7 @@ const PORT = process.env.PORT || 3000;
 app.use(
   cors({
     origin:["http://localhost:5173",
-      "https://devconnect-wheat.vercel.app/"
+      "https://devconnect-wheat.vercel.app"
     ],
     credentials: true
   }))
