@@ -6,6 +6,7 @@ require("./config/database");
 const { connectDB } = require("./config/database");
 const cookieParser = require("cookie-parser");
 const cors = require("cors")
+const PORT = process.env.PORT || 3000;
 
 app.use(
   cors({
@@ -43,8 +44,8 @@ app.use((req, res, next) => {
 connectDB()
   .then(() => {
     console.log("Database connection established");
-    app.listen(3000, () => {
-      console.log("app is listning at http://localhost:3000 ");
+    app.listen(PORT, () => {
+      console.log(`App is listening on port ${PORT}`);
     });
   })
   .catch((err) => {
