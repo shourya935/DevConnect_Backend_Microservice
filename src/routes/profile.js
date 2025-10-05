@@ -15,10 +15,9 @@ const multer = require("multer")
 
 profileRouter.get("/profile/veiw", userAuth, async (req, res) => {
   try {
-    const user = req.user;
-    res.send(user);
+    res.send(req.user);
   } catch (err) {
-    res.status(404).send(err.message);
+    res.status(500).send(err.message);
   }
 });
 

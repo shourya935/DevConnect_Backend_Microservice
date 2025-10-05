@@ -7,19 +7,19 @@ const bcrypt = require("bcrypt");
 const path = require("path");
 const { upload } = require("../middlewares/upload");
 
+// Handle Sign Up
 authRouter.post("/signup", async (req, res) => {
   upload.single("image")(req, res, async function (err) {
     if (err instanceof multer.MulterError) {
-      return res
-        .status(400)
-        .json({
-          success: false,
-          message: "❌ Please upload a photo less than 3MB",
-        });
+      return res.status(400).json({
+        success: false,
+        message: "❌ Please upload a photo less than 3MB",
+      });
     } else if (err) {
-      return res
-        .status(400)
-        .json({ success: false, message: `❌ Upload Error: ${err.message}` });
+      return res.status(400).json({
+        success: false,
+        message: `❌ Upload Error: ${err.message}`,
+      });
     }
 
     const {
@@ -36,13 +36,10 @@ authRouter.post("/signup", async (req, res) => {
     const imageUrl = req.file?.path;
 
     try {
-      //validation of data
       validateSignUpData(req);
 
-      //encrypt the password
       const passwordHash = await bcrypt.hash(password, 8);
 
-      //create new instance of User Model
       const user = new User({
         firstName,
         lastName,
@@ -53,15 +50,20 @@ authRouter.post("/signup", async (req, res) => {
         age,
         gender,
         photoURL: imageUrl,
-        // photoURL:'images/'+ req.file.filename
       });
 
       await user.save();
 
       const token = await user.getJWT();
-      res.cookie("token", token);
 
-      res.status(201).json({ user: user });
+      res.cookie("token", token, {
+        httpOnly: true,
+        sameSite: "none", // ✅ Required for cross-origin
+        secure: process.env.NODE_ENV === "production", // ✅ Required on Vercel
+        maxAge: 1000 * 60 * 60 * 24,
+      });
+
+      res.status(201).json({ success: true, user });
     } catch (err) {
       if (err.code === 11000 && err.keyPattern?.emailID) {
         return res.status(400).json({
@@ -70,11 +72,13 @@ authRouter.post("/signup", async (req, res) => {
             "Entered Email Address is already registered. Try logging in instead or use a different email address",
         });
       }
+
       res.status(400).json({ success: false, message: err.message });
     }
   });
 });
 
+// Handle Login
 authRouter.post("/login", async (req, res) => {
   const { emailID, password } = req.body;
 
@@ -97,27 +101,29 @@ authRouter.post("/login", async (req, res) => {
 
     const token = await user.getJWT();
 
-    // Set secure cookie for production
     res.cookie("token", token, {
       httpOnly: true,
-      sameSite: "none", // required for cross-origin cookies
+      sameSite: "none",
       secure: process.env.NODE_ENV === "production",
-      maxAge: 1000 * 60 * 60 * 24, // 1 day
+      maxAge: 1000 * 60 * 60 * 24,
     });
 
     res.json({ success: true, user });
   } catch (err) {
-    console.error(err);
+    console.error("Login Error:", err);
     res.status(500).json({ success: false, message: "Server Error" });
   }
 });
 
-
+// Handle Logout
 authRouter.post("/logout", (req, res) => {
   res.cookie("token", null, {
+    httpOnly: true,
+    sameSite: "none",
+    secure: process.env.NODE_ENV === "production",
     expires: new Date(Date.now()),
   });
-  res.send("logout Successful");
+  res.json({ success: true, message: "Logout successful" });
 });
 
 module.exports = authRouter;
