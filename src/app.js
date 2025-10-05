@@ -9,7 +9,9 @@ const cors = require("cors")
 
 app.use(
   cors({
-    origin: "http://localhost:5173",
+    origin:["http://localhost:5173",
+      "https://dev-connect-frontend-microservice.vercel.app"
+    ],
     credentials: true
   }))
 app.use(express.urlencoded({ extended: true }));// Parse URL-encoded bodies (from HTML forms)

@@ -79,29 +79,39 @@ authRouter.post("/login", async (req, res) => {
   const { emailID, password } = req.body;
 
   try {
-    //email validation
-    const user = await User.findOne({ emailID: emailID });
+    const user = await User.findOne({ emailID });
     if (!user) {
-      throw new Error("❌ Email ID does not exist. Please register first.");
+      return res.status(401).json({
+        success: false,
+        message: "❌ Email ID does not exist. Please register first.",
+      });
     }
-    //password validation
+
     const isPasswordValid = await user.ValidatePassword(password);
     if (!isPasswordValid) {
-      throw new Error("!! Incorrect Password please try again");
+      return res.status(401).json({
+        success: false,
+        message: "!! Incorrect Password please try again",
+      });
     }
-    //if login successful
-    //create a JWT Token
+
     const token = await user.getJWT();
-    console.log(token);
 
-    //Add token to cookie and send response back to user
-    res.cookie("token", token); //cookie sent to client
+    // Set secure cookie for production
+    res.cookie("token", token, {
+      httpOnly: true,
+      sameSite: "none", // required for cross-origin cookies
+      secure: process.env.NODE_ENV === "production",
+      maxAge: 1000 * 60 * 60 * 24, // 1 day
+    });
 
-    res.send(user);
+    res.json({ success: true, user });
   } catch (err) {
-    res.status(404).json({ success: false, message: err.message });
+    console.error(err);
+    res.status(500).json({ success: false, message: "Server Error" });
   }
 });
+
 
 authRouter.post("/logout", (req, res) => {
   res.cookie("token", null, {
