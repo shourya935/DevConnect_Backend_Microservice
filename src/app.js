@@ -10,12 +10,14 @@ const PORT = process.env.PORT || 3000;
 
 app.use(
   cors({
-    origin:["http://localhost:5173",
-      "https://devconnect-wheat.vercel.app"
-    ],
+    origin: ["http://localhost:5173", "https://devconnect-wheat.vercel.app"],
     credentials: true,
-     methods: ["GET", "POST", "PUT", "PATCH", "DELETE"], 
-  }))
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"], 
+    allowedHeaders: ["Content-Type", "Authorization"], 
+  })
+);
+app.options("*", cors());
+
 app.use(express.urlencoded({ extended: true }));// Parse URL-encoded bodies (from HTML forms)
 app.use(express.json());
 app.use(cookieParser());
