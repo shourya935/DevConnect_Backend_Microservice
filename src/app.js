@@ -10,7 +10,7 @@ const PORT = process.env.PORT || 3000;
 
 app.use(
   cors({
-    origin: ["http://localhost:5173", "https://devconnect-peach.vercel.app"  ],
+    origin: ["http://localhost:5173", "https://devconnect-peach.vercel.app" , "https://devconnect-mhhs71khe-shouryas-projects-230bf7f7.vercel.app" ],
     credentials: true,
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"], 
     allowedHeaders: ["Content-Type", "Authorization"], 
