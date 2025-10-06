@@ -56,14 +56,11 @@ authRouter.post("/signup", async (req, res) => {
 
       const token = await user.getJWT();
 
-      res.cookie("token", token, {
-        httpOnly: true,
-        sameSite: process.env.NODE_ENV === "production" ? "none" : "lax", // change this
-        secure: process.env.NODE_ENV === "production", // ✅ true on prod, false locally
-        maxAge: 24 * 60 * 60 * 1000,
+      res.json({
+        success: true,
+        user,
+        token, // Send token to frontend
       });
-
-      res.status(201).json({ success: true, user });
     } catch (err) {
       if (err.code === 11000 && err.keyPattern?.emailID) {
         return res.status(400).json({
@@ -101,14 +98,11 @@ authRouter.post("/login", async (req, res) => {
 
     const token = await user.getJWT();
 
-    res.cookie("token", token, {
-      httpOnly: true,
-      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax", // change this
-      secure: process.env.NODE_ENV === "production", // ✅ true on prod, false locally
-      maxAge: 24 * 60 * 60 * 1000,
+    res.json({
+      success: true,
+      user,
+      token, // Send token to frontend
     });
-
-    res.json({ success: true, user });
   } catch (err) {
     console.error("Login Error:", err);
     res.status(500).json({ success: false, message: "Server Error" });
@@ -117,12 +111,8 @@ authRouter.post("/login", async (req, res) => {
 
 // Handle Logout
 authRouter.post("/logout", (req, res) => {
-  res.cookie("token", null, {
-    httpOnly: true,
-    sameSite: "none",
-    secure: process.env.NODE_ENV === "production",
-    expires: new Date(Date.now()),
-  });
+  // No need to clear cookies anymore
+  // Frontend will handle localStorage.removeItem('authToken')
   res.json({ success: true, message: "Logout successful" });
 });
 
