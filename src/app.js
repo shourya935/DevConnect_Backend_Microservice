@@ -33,11 +33,13 @@ const authRouter = require("./routes/auth");
 const profileRouter = require("./routes/profile");
 const requestRouter = require("./routes/requests")
 const userRouter = require("./routes/user")
+const messageRouter = require("./routes/message")
 
 app.use("/",authRouter);
-app.use("/", profileRouter);
+app.use("/",profileRouter);
 app.use("/",requestRouter)
 app.use("/",userRouter)
+app.use("/",messageRouter)
 
 app.use((req, res, next) => {
   console.log("Incoming request:", req.method, req.url);
