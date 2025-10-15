@@ -1,12 +1,12 @@
 
 const express = require("express");
-const app = express();
 const path = require("path");
 require("./config/database");
 const { connectDB } = require("./config/database");
 const cookieParser = require("cookie-parser");
 const cors = require("cors")
 const PORT = process.env.PORT || 3000;
+const {app,server} = require("./utils/socket")
 
 app.use(
   cors({
@@ -50,7 +50,7 @@ app.use((req, res, next) => {
 connectDB()
   .then(() => {
     console.log("Database connection established");
-    app.listen(PORT, () => {
+    server.listen(PORT, () => {
       console.log(`App is listening on port ${PORT}`);
     });
   })
