@@ -4,6 +4,7 @@ const { userAuth } = require("../middlewares/auth");
 const { Message } = require("../models/message");
 const { upload } = require("../middlewares/upload");
 const { User } = require("../models/user");
+const { getReceiverSocketId, io } = require("../utils/socket");
 
 const messageRouter = express.Router();
 
@@ -108,38 +109,51 @@ messageRouter.post("/message/:receiverId", userAuth, upload.single("image"), asy
     const { receiverId } = req.params;
     const senderId = req.user._id;
 
-    // Validate that at least text or image is provided
+    // ✅ Validate message content
     if (!text && !req.file) {
       return res.status(400).json({ error: "Message must contain text or image" });
     }
 
-    // Verify receiver exists
+    // ✅ Verify receiver exists
     const receiver = await User.findById(receiverId);
     if (!receiver) {
       return res.status(404).json({ error: "Receiver not found" });
     }
 
-    const imageUrl = req.file?.path; // Cloudinary image URL from multer storage
+    // ✅ Image (if uploaded via multer + Cloudinary)
+    const imageUrl = req.file?.path || null;
 
+    // ✅ Create and save message
     const newMessage = new Message({
       senderId,
       receiverId,
-      text,
+      text: text?.trim() || "",
       image: imageUrl,
     });
 
     await newMessage.save();
 
-    // Populate sender info for response
+    // ✅ Populate message with sender/receiver info
     const populatedMessage = await Message.findById(newMessage._id)
       .populate("senderId", "firstName photoURL")
       .populate("receiverId", "firstName photoURL");
 
-    //todo: socket.io logic will be written here 
+    // ✅ Get receiver socket ID and emit event
+    const receiverSocketId = getReceiverSocketId(receiverId);
+    if (receiverSocketId) {
+      io.to(receiverSocketId).emit("newMessage", populatedMessage);
+    }
 
+    // ✅ Also emit message to sender (so it appears instantly in their chat)
+    const senderSocketId = getReceiverSocketId(senderId);
+    if (senderSocketId) {
+      io.to(senderSocketId).emit("newMessage", populatedMessage);
+    }
+
+    // ✅ Respond back to sender
     res.status(201).json(populatedMessage);
   } catch (error) {
-    console.log("Error in sendMessage route:", error.message);
+    console.error("Error in sendMessage route:", error.message);
     res.status(500).json({ error: "Internal server error" });
   }
 });
