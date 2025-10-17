@@ -10,7 +10,7 @@ const {app,server} = require("./utils/socket")
 
 app.use(
   cors({
-    origin: ["http://localhost:5173", "https://devconnect-peach.vercel.app" , "https://devconnect-mhhs71khe-shouryas-projects-230bf7f7.vercel.app" ],
+    origin: ["http://localhost:5173", "https://dev-connect-pied-mu.vercel.app" ],
     credentials: true,
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"], 
     allowedHeaders: ["Content-Type", "Authorization"], 
