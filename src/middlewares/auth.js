@@ -3,7 +3,7 @@ const jwt = require("jsonwebtoken");
 
 const userAuth = async (req, res, next) => {
   try {
-    // ✅ Get token from Authorization header
+    // Get token from Authorization header
     const authHeader = req.headers.authorization;
     
     if (!authHeader || !authHeader.startsWith('Bearer ')) {

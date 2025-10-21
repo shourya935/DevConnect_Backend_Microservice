@@ -13,12 +13,12 @@ authRouter.post("/signup", async (req, res) => {
     if (err instanceof multer.MulterError) {
       return res.status(400).json({
         success: false,
-        message: "❌ Please upload a photo less than 3MB",
+        message: " Please upload a photo less than 3MB",
       });
     } else if (err) {
       return res.status(400).json({
         success: false,
-        message: `❌ Upload Error: ${err.message}`,
+        message: ` Upload Error: ${err.message}`,
       });
     }
 
@@ -84,7 +84,7 @@ authRouter.post("/login", async (req, res) => {
     if (!user) {
       return res.status(401).json({
         success: false,
-        message: "❌ Email ID does not exist. Please register first.",
+        message: "Email ID does not exist. Please register first.",
       });
     }
 
